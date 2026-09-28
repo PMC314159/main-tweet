@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Main Tweet Studio v26</title>
+<style>
+  :root{
+    --accent:#6f74ff;
+    --text:#1d1d1f;
+    --muted:#52525a;
+    --block-title-color:#3f3f46;
+    --body-text-color:#2f2f36;
+    --hashtag-text-color:#111111;
+    --block-alpha:.22;
+    --bg1:#edf0f8;
+    --bg2:#dde3ef;
+    --glass:rgba(255,255,255,.28);
+    --glass-2:rgba(255,255,255,.36);
+    --line:rgba(255,255,255,.58);
+    --panel-radius:28px;
+    --shadow:0 24px 64px rgba(25,25,31,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Pretendard","Noto Sans KR",system-ui,sans-serif;
+    color:var(--text);min-height:100vh;
+    background:
+      radial-gradient(circle at 14% 12%, rgba(111,116,255,.10), transparent 32%),
+      radial-gradient(circle at 88% 18%, rgba(255,255,255,.9), transparent 28%),
+      linear-gradient(135deg,var(--bg1),var(--bg2));
+  }
+  button,input,textarea,select{font:inherit}
+  button{cursor:pointer}
+  .app{display:grid;grid-template-columns:420px 1fr;min-height:100vh}
+  .editor{
+    position:sticky;top:0;height:100vh;overflow:auto;padding:22px;
+    background:rgba(247,247,250,.82);backdrop-filter:blur(24px);
+    border-right:1px solid rgba(255,255,255,.46)
+  }
+  .brand{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+  .brand-left{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:40px;height:40px;border-radius:14px;
+    background:linear-gradient(145deg,var(--accent),#4c50ad);
+    box-shadow:0 10px 24px rgba(111,116,255,.22);
+  }
+  .brand h1{margin:0;font-size:18px;letter-spacing:-.03em}
+  .mini-btn,.primary,.secondary,.danger{
+    border-radius:12px;padding:10px 13px;font-size:12px;font-weight:740
+  }
+  .mini-btn,.secondary{background:rgba(255,255,255,.74);border:1px solid rgba(0,0,0,.08);color:var(--text)}
+  .primary{border:none;background:var(--text);color:#fff}
+  .danger{border:1px solid #ffd8de;background:#fff1f3;color:#b42318}
+  .section{
+    background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.72);border-radius:22px;padding:15px;margin-bottom:12px;
+    backdrop-filter:blur(16px);box-shadow:0 8px 28px rgba(0,0,0,.04)
+  }
+  .section h2{margin:0 0 12px;font-size:13px}
+  .hint{font-size:11px;color:var(--muted);line-height:1.55;margin:-4px 0 10px}
+  .field{margin-bottom:11px}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-size:11px;font-weight:760;color:#4e4e56;margin-bottom:6px}
+  input[type="text"],textarea,select{
+    width:100%;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.80);
+    border-radius:13px;padding:10px 11px;outline:none
+  }
+  textarea{min-height:72px;resize:vertical;line-height:1.56}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .filebox{border:1px dashed rgba(0,0,0,.16);background:rgba(255,255,255,.50);border-radius:13px;padding:10px}
+  input[type="file"]{width:100%;font-size:11px}
+  .range-row{display:grid;grid-template-columns:1fr 54px;gap:8px;align-items:center}
+  input[type="range"]{width:100%;accent-color:var(--accent)}
+  .tiny-num{font-size:11px;color:var(--muted);text-align:right}
+  .tag-editor{display:flex;gap:7px}
+  .tag-editor input{flex:1}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;margin:0 6px 6px 0;padding:7px 10px;border-radius:999px;
+    background:rgba(255,255,255,.74);border:1px solid rgba(0,0,0,.08);font-size:11px;font-weight:680;
+  }
+  .editor-card{
+    margin-top:10px;padding:11px;border-radius:15px;background:rgba(255,255,255,.62);border:1px solid rgba(0,0,0,.08)
+  }
+  .editor-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .editor-card-head strong{font-size:11px}
+
+  .workspace{padding:24px;overflow:auto}
+  .toolbar{
+    max-width:1180px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:center;
+    gap:10px;color:var(--muted);font-size:12px
+  }
+  .live{display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#34c759;box-shadow:0 0 0 4px rgba(52,199,89,.12)}
+  .preview-shell{
+    max-width:1180px;margin:auto;border-radius:0;padding:1px;
+    background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,255,255,.26));
+    box-shadow:var(--shadow);
+  }
+  #capture{
+    position:relative;
+    overflow:hidden;border-radius:0;padding:22px;
+    background:
+      radial-gradient(circle at 84% 12%, rgba(111,116,255,.15), transparent 24%),
+      linear-gradient(135deg,rgba(247,247,251,.82),rgba(232,236,245,.88));
+  }
+  .bg-art{
+    position:absolute;inset:0;background-size:cover;background-position:center;opacity:.28;transform:scale(1.04);pointer-events:none
+  }
+  .ambient{display:none !important}
+  .preview-content{position:relative;z-index:1}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1.34fr) minmax(310px,.90fr);gap:16px;align-items:start}
+  .main-art-card,.panel,.gallery-section,.info-block,.keywords-panel{
+    background:rgba(255,255,255,var(--block-alpha));
+    border:1px solid rgba(255,255,255,.50);
+    backdrop-filter:blur(24px);
+    box-shadow:0 14px 34px rgba(0,0,0,.05)
+  }
+  .main-art-card{
+    position:relative;
+    isolation:isolate;
+    border-radius:var(--panel-radius);
+    overflow:hidden;
+    min-height:0
+  }
+  .main-art-card img,
+  .main-art-card > canvas{
+    position:absolute !important;
+    inset:0 !important;
+    z-index:0 !important;
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover;
+    object-position:50% 50%
+  }
+  .empty-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8a8a93;font-size:14px;background:linear-gradient(145deg,rgba(234,235,241,.84),rgba(216,218,228,.78))}
+  .hero-overlay{
+    position:absolute !important;
+    inset:0 !important;
+    z-index:10 !important;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    padding:28px;
+    background:linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0) 42%,
+      rgba(0,0,0,.30) 62%,
+      rgba(0,0,0,.82) 100%
+    );
+    color:#fff;
+    pointer-events:none
+  }
+  .eyebrow{font-size:11px;font-weight:820;letter-spacing:.16em;text-transform:uppercase;opacity:.76}
+  .hero-overlay h2{margin:8px 0 8px;font-size:38px;line-height:1.05;letter-spacing:-.05em}
+  .hero-overlay p{margin:0;font-size:13px;line-height:1.56;max-width:720px;opacity:.92;white-space:pre-wrap}
+
+  .right-column{display:flex;flex-direction:column;gap:14px}
+  .panel{border-radius:var(--panel-radius);padding:18px}
+  .profile-card{padding:12px 14px}
+  .profile-card{display:flex;flex-direction:column;gap:0;position:relative}
+  .profile-top{
+    display:grid;
+    grid-template-columns:82px minmax(0,1fr);
+    gap:10px;
+    align-items:center
+  }
+  .avatar{width:82px;height:82px;border-radius:23px;overflow:hidden;flex:none;background:rgba(229,229,234,.68);box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+  .avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+  .profile-meta{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center
+  }
+  .name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .profile-meta h1{margin:0;font-size:18px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta-line{display:flex;align-items:center;margin-top:4px}
+  .icon{width:15px;height:15px;display:inline-block;opacity:.74;flex:none}
+  .handle{color:var(--body-text-color);font-size:12px;font-weight:680}
+  .profile-bio-wrap{
+    margin-top:7px;
+    max-width:100%
+  }
+  .profile-bio{
+    font-size:12px;
+    line-height:1.55;
+    color:var(--body-text-color);
+    white-space:pre-wrap
+  }
+  #previewInfoBlocks{display:flex;flex-direction:column;gap:12px}
+  .info-block{
+    padding:14px;
+    border-radius:18px;
+    background:rgba(255,255,255,var(--block-alpha));
+    border:1px solid rgba(255,255,255,.44)
+  }
+  .info-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--block-title-color)}
+  .info-label{font-size:10px;color:inherit;font-weight:820;letter-spacing:.10em;text-transform:uppercase}
+  .info-text{font-size:12px;line-height:1.58;color:var(--body-text-color);white-space:pre-wrap}
+  .keywords-panel{
+    padding:12px 14px;
+    border-radius:20px;
+    background:rgba(255,255,255,var(--block-alpha));
+    border:1px solid rgba(255,255,255,.42)
+  }
+  .tag-panel-head,.archive-card-head{display:flex;align-items:center;gap:7px;margin-bottom:8px;color:var(--block-title-color)}
+  .tag-title{
+    font-size:9px;
+    color:inherit;
+    font-weight:820;
+    letter-spacing:.12em;
+    text-transform:uppercase
+  }
+  .tag-wrap{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{
+    padding:5px 9px;
+    border-radius:999px;
+    font-size:9px;
+    line-height:1.2;
+    font-weight:740;
+    border:1px solid rgba(111,116,255,.22);
+    color:var(--hashtag-text-color);
+    background:rgba(245,245,255,.46);
+    backdrop-filter:blur(10px)
+  }
+  .gallery-section{margin-top:16px;border-radius:var(--panel-radius);padding:18px}
+  .section-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}
+  .section-left{display:flex;align-items:center;gap:8px;color:var(--block-title-color)}
+  .section-title h3{margin:0;font-size:18px;letter-spacing:-.03em}
+  .section-title p{margin:0;font-size:10px;color:var(--muted)}
+  .gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .fan-card{
+    position:relative;
+    isolation:isolate;
+    min-height:220px;
+    border-radius:20px;
+    overflow:hidden;
+    background:rgba(221,223,232,.55);
+    border:1px solid rgba(255,255,255,.56);
+    box-shadow:0 10px 24px rgba(0,0,0,.07)
+  }
+  .fan-card.wide{grid-column:span 2}
+  .fan-card img,
+  .fan-card > canvas{
+    position:absolute !important;
+    inset:0 !important;
+    z-index:0 !important;
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover;
+    object-position:50% 50%
+  }
+  .fan-card .shade{
+    position:absolute !important;
+    inset:0 !important;
+    z-index:10 !important;
+    background:linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0) 38%,
+      rgba(0,0,0,.28) 58%,
+      rgba(0,0,0,.88) 100%
+    );
+    pointer-events:none
+  }
+  .fan-card .copy{
+    position:absolute !important;
+    left:15px;
+    right:15px;
+    bottom:14px;
+    z-index:20 !important;
+    color:#fff
+  }
+  .fan-card .kicker{font-size:9px;font-weight:800;letter-spacing:.12em;opacity:.76;text-transform:uppercase}
+  .fan-card h4{margin:4px 0 4px;font-size:18px;letter-spacing:-.03em}
+  .fan-card p{margin:0;font-size:10px;line-height:1.46;opacity:.9;white-space:pre-wrap}
+  .empty-gallery{
+    grid-column:1/-1;min-height:130px;border-radius:18px;border:1px dashed rgba(0,0,0,.14);
+    display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;background:rgba(255,255,255,.22)
+  }
+  .bottom-credit{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    align-items:center;
+    gap:12px;
+    padding:12px 4px 0;
+    color:#111114;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase
+  }
+  .bottom-credit .left{text-align:left;font-weight:820;color:#0b0b0d}
+  .bottom-credit .right{text-align:right;color:#0b0b0d}
+  .foot-label{opacity:1;margin-right:8px;font-weight:820}
+  @media (max-width:1170px){
+    .app{grid-template-columns:360px 1fr}
+    .hero-grid{grid-template-columns:1fr}
+    .gallery{grid-template-columns:repeat(3,1fr)}
+  }
+  @media (max-width:860px){
+    .app{display:block}
+    .editor{position:relative;height:auto;border-right:0;border-bottom:1px solid rgba(255,255,255,.4)}
+    .workspace{padding:14px}
+    .gallery{grid-template-columns:repeat(2,1fr)}
+    .gallery .fan-card{grid-column:auto}
+    .hero-overlay h2{font-size:30px}
+    .bottom-credit{grid-template-columns:1fr;justify-items:center;gap:8px}
+    .bottom-credit .right,.bottom-credit .center{text-align:center}
+  }
+  @media (max-width:560px){
+    .gallery{grid-template-columns:1fr}
+    .row{grid-template-columns:1fr}
+    .editor{padding:14px}
+  }
+
+  .check-row{display:flex;align-items:center;gap:8px;font-size:11px;color:#4e4e56;margin-top:6px}
+  .check-row input{width:15px;height:15px;accent-color:var(--accent)}
+  .color-control{display:flex;align-items:center;gap:9px}
+  .color-control input[type="color"]{width:42px;height:32px;border:0;background:none;padding:0}
+  .color-control span{font-size:11px;color:var(--muted)}
+  .subtle-note{font-size:10px;color:var(--muted);line-height:1.45;margin-top:6px}
+
+
+  /* Editor section collapse / expand */
+  .section{
+    position:relative;
+  }
+  .section-toggle{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:0;
+    margin:0 0 12px;
+    border:0;
+    background:transparent;
+    color:inherit;
+    text-align:left;
+    cursor:pointer;
+  }
+  .section-toggle h2{
+    margin:0;
+  }
+  .section-chevron{
+    width:24px;
+    height:24px;
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    background:rgba(255,255,255,.46);
+    border:1px solid rgba(0,0,0,.06);
+    color:#55555d;
+    transition:transform .18s ease, background .18s ease;
+    font-size:13px;
+    line-height:1;
+  }
+  .section.collapsed .section-chevron{
+    transform:rotate(-90deg);
+  }
+  .section-content{
+    display:block;
+  }
+  .section.collapsed .section-content{
+    display:none;
+  }
+  .section.collapsed .section-toggle{
+    margin-bottom:0;
+  }
+  .collapse-tools{
+    display:flex;
+    gap:7px;
+    margin:-4px 0 12px;
+  }
+  .collapse-tools button{
+    border:1px solid rgba(0,0,0,.08);
+    background:rgba(255,255,255,.62);
+    color:#4f4f57;
+    border-radius:10px;
+    padding:7px 10px;
+    font-size:11px;
+    font-weight:700;
+  }
+
+
+  /* Export-safe mode for html2canvas */
+  #capture.exporting,
+  #capture.exporting *{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+  #capture.exporting .ambient{
+    filter:none !important;
+    opacity:.08 !important;
+  }
+
+
+  /* Rectangular main tweet canvas */
+  #capture,
+  .preview-shell,
+  .capture-shell,
+  .canvas-shell{
+    border-radius:0 !important;
+    clip-path:none !important;
+  }
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="editor">
+    <div class="brand">
+      <div class="brand-left">
+        <div class="logo"></div>
+        <div>
+          <h1>Main Tweet Studio</h1>
+        </div>
+      </div>
+      <button class="mini-btn" id="resetBtn">초기화</button>
+    </div>
+
+    <div class="collapse-tools">
+      <button type="button" id="collapseAllBtn">모두 접기</button>
+      <button type="button" id="expandAllBtn">모두 펼치기</button>
+    </div>
+
+    <div class="section">
+      <h2>01. 기본 프로필</h2>
+      <div class="field"><label>닉네임</label><input id="nickname" type="text" value="닉네임" /></div>
+      <div class="field"><label>아이디 / 핸들</label><input id="handle" type="text" value="아이디" /></div>
+      <div class="field"><label>프로필 사진</label><div class="filebox"><input id="profileImage" type="file" accept="image/*" /></div></div>
+      <div class="row">
+        <div class="field"><label>프로필 사진 가로 위치</label><div class="range-row"><input id="profilePosX" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="profilePosXVal">50%</span></div></div>
+        <div class="field"><label>프로필 사진 세로 위치</label><div class="range-row"><input id="profilePosY" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="profilePosYVal">50%</span></div></div>
+      </div>
+      <div class="field"><label>바이오</label><textarea id="bio">바이오 또는 간단한 계정 설명을 적어주세요.</textarea></div>
+    </div>
+
+    <div class="section">
+      <h2>02. 메인 일러스트 & 배경</h2>
+      <div class="field"><label>메인 일러스트</label><div class="filebox"><input id="mainImage" type="file" accept="image/*" /></div></div>
+      <div class="row">
+        <div class="field">
+          <label>메인 페어 표기</label>
+          <input id="mainTitle" type="text" value="MAIN PAIR" />
+        </div>
+        <div class="field">
+          <label>분류</label>
+          <input id="mainCategory" type="text" value="PAIR" />
+        </div>
+      </div>
+      <div class="field">
+        <label>간단한 페어 설명</label>
+        <textarea id="mainDesc">간단한 페어 설명을 적어주세요</textarea>
+      </div>
+      <div class="row">
+        <div class="field"><label>메인 가로 위치</label><div class="range-row"><input id="mainPosX" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="mainPosXVal">50%</span></div></div>
+        <div class="field"><label>메인 세로 위치</label><div class="range-row"><input id="mainPosY" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="mainPosYVal">50%</span></div></div>
+      </div>
+      <div class="field"><label>배경 일러스트</label><div class="filebox"><input id="bgImage" type="file" accept="image/*" /></div></div>
+      <div class="row">
+        <div class="field"><label>배경 가로 위치</label><div class="range-row"><input id="bgPosX" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="bgPosXVal">50%</span></div></div>
+        <div class="field"><label>배경 세로 위치</label><div class="range-row"><input id="bgPosY" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="bgPosYVal">50%</span></div></div>
+      </div>
+      <div class="field"><label>배경 투명도</label><div class="range-row"><input id="bgOpacity" type="range" min="0" max="60" value="28" /><span class="tiny-num" id="bgOpacityVal">28%</span></div></div>
+    </div>
+
+    <div class="section">
+      <h2>03. 정보 블럭</h2>
+      <p class="hint">아이콘이 붙는 SNS풍 정보 블럭이에요.</p>
+      <button class="primary" id="addInfoBtn">+ 정보 블럭 추가</button>
+      <div id="infoEditor"></div>
+    </div>
+
+    <div class="section">
+      <h2>04. 키워드</h2>
+      <div class="field">
+        <label>태그 입력</label>
+        <div class="tag-editor"><input id="tagInput" type="text" placeholder="예: #드림" /><button class="secondary" id="addTagBtn">추가</button></div>
+      </div>
+      <div id="tagEditorList"></div>
+    </div>
+
+    <div class="section">
+      <h2>05. 아카이브 카드</h2>
+      <button class="primary" id="addCardBtn">+ 카드 추가</button>
+      <div id="galleryEditor"></div>
+    </div>
+
+    <div class="section">
+      <h2>06. 스타일</h2>
+      <div class="row">
+        <div class="field">
+          <label>포인트 컬러</label>
+          <input id="accentColor" type="color" value="#6f74ff" style="width:42px;height:32px;border:0;background:none;padding:0" />
+          <div class="tiny-num" id="accentHex">#6F74FF</div>
+        </div>
+        <div class="field">
+          <label>모서리</label>
+          <select id="cornerStyle">
+            <option value="28">둥글게</option>
+            <option value="22">보통</option>
+            <option value="14">조금 각지게</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>블럭 제목 색상 통일</label>
+        <div class="color-control">
+          <input id="globalTitleColor" type="color" value="#3f3f46" />
+          <span id="globalTitleHex">#3F3F46</span>
+        </div>
+        <label class="check-row">
+          <input id="unifyTitleColors" type="checkbox" checked />
+          블럭 제목·아이콘 색상을 전부 이 색으로 통일
+        </label>
+        <div class="subtle-note">체크를 해제하면 정보 블럭, Keywords, Archive 색상을 각각 바꿀 수 있어요.</div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Keywords 제목 색상</label>
+          <div class="color-control">
+            <input id="keywordsTitleColor" type="color" value="#3f3f46" />
+            <span id="keywordsTitleHex">#3F3F46</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Archive 제목 색상</label>
+          <div class="color-control">
+            <input id="archiveTitleColor" type="color" value="#3f3f46" />
+            <span id="archiveTitleHex">#3F3F46</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>본문 글씨 색상</label>
+        <div class="color-control">
+          <input id="bodyTextColor" type="color" value="#2f2f36" />
+          <span id="bodyTextHex">#2F2F36</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>해시태그 글씨 색상</label>
+        <div class="color-control">
+          <input id="hashtagTextColor" type="color" value="#111111" />
+          <span id="hashtagTextHex">#111111</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>블럭 투명도</label>
+        <div class="range-row">
+          <input id="blockOpacity" type="range" min="8" max="45" value="22" />
+          <span class="tiny-num" id="blockOpacityVal">22%</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="primary" id="saveImageBtn">PNG 저장</button>
+        <button class="secondary" id="saveJsonBtn">설정 저장</button>
+        <label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer;">설정 불러오기<input id="loadJson" type="file" accept=".json" style="display:none" /></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>07. 커미션주 표기</h2>
+      <p class="hint">완성본 오른쪽 하단의 <strong>COMMISSION BY</strong> 뒤에 표시될 계정을 적어주세요.</p>
+      <div class="field">
+        <label>커미션주</label>
+        <input id="commissioners" type="text" value="@example1, @example2" />
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="workspace">
+    <div class="toolbar">
+      <div class="live"><span class="dot"></span> Live Preview</div>
+    </div>
+
+    <div class="preview-shell">
+      <section id="capture">
+        <div class="bg-art" id="bgArt"></div>
+        <div class="ambient" id="ambient"></div>
+        <div class="preview-content">
+          <div class="hero-grid">
+            <div class="main-art-card" id="mainArtCard">
+              <div class="empty-art" id="emptyMain">메인 일러스트를 업로드해 주세요</div>
+              <img id="previewMainImage" alt="" style="display:none" />
+              <div class="hero-overlay">
+                <div class="eyebrow" id="previewMainCategory">PAIR</div>
+                <h2 id="previewMainTitle">MAIN PAIR</h2>
+                <p id="previewMainDesc">간단한 페어 설명을 적어주세요</p>
+              </div>
+            </div>
+
+            <div class="right-column" id="rightColumn">
+              <div class="panel profile-card">
+                <div class="profile-top">
+                  <div class="avatar"><img id="previewProfileImage" alt="" style="display:none" /></div>
+                  <div class="profile-meta">
+                    <div class="name-row">
+                      <h1 id="previewNickname">닉네임</h1>
+                    </div>
+                    <div class="meta-line">
+                      <div class="handle" id="previewHandle">아이디</div>
+                    </div>
+                    <div class="profile-bio-wrap">
+                      <div class="profile-bio" id="previewBio">바이오 또는 간단한 계정 설명을 적어주세요.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="previewInfoBlocks"></div>
+
+              <div class="panel keywords-panel">
+                <div class="tag-panel-head" id="keywordsHead">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 10 10 20 3 13l10-10h7z"/><circle cx="16.5" cy="7.5" r="1"/></svg>
+                  <div class="tag-title">Keywords</div>
+                </div>
+                <div class="tag-wrap" id="previewTags"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gallery-section">
+            <div class="section-title">
+              <div class="section-left" id="archiveHead">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg>
+                <h3>Archive</h3>
+              </div>
+            </div>
+            <div class="gallery" id="previewGallery">
+              <div class="empty-gallery">왼쪽에서 아카이브 카드를 추가해 주세요</div>
+            </div>
+          </div>
+
+          <div class="bottom-credit">
+            <div class="left">MADE BY @BAKHA_cm</div>
+            <div class="right"><span class="foot-label">COMMISSION BY</span><span id="previewCommissioners">@example1, @example2</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const state = {
+    tags:["#드림"],
+    infoBlocks:[
+      {label:"Tendency", text:"성향 내용을 자유롭게 입력해 주세요.", titleColor:"#3f3f46"},
+      {label:"NG", text:"NG 사항을 적어주세요", titleColor:"#3f3f46"}
+    ],
+    cards:[
+      {kicker:"PAIR", title:"SUB PAIR", desc:"좋아하는 페어나 세계관 설명을 적어 주세요.", wide:true, posX:50, posY:50, src:""},
+      {kicker:"CHARACTER", title:"최애 캐릭터", desc:"캐릭터에 대한 짧은 소개나 포인트.", wide:false, posX:50, posY:50, src:""},
+      {kicker:"GENRE", title:"최근 덕질", desc:"요즘 파는 장르나 작품을 적어 주세요.", wide:false, posX:50, posY:50, src:""}
+    ],
+    profileSrc:"", mainSrc:"", bgSrc:""
+  };
+
+  function escapeHtml(s=""){
+    return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  }
+  [["nickname","previewNickname"],["handle","previewHandle"],["bio","previewBio"],["mainTitle","previewMainTitle"],["mainCategory","previewMainCategory"],["mainDesc","previewMainDesc"],["commissioners","previewCommissioners"]]
+  .forEach(([a,b])=>{$(a).addEventListener("input",()=>$(b).textContent=$(a).value);$(b).textContent=$(a).value;});
+
+  function fileToDataURL(file, cb){
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>cb(e.target.result);
+    reader.readAsDataURL(file);
+  }
+  $("profileImage").addEventListener("change",e=>fileToDataURL(e.target.files[0],src=>{state.profileSrc=src;$("previewProfileImage").src=src;$("previewProfileImage").style.display="block";}));
+  $("mainImage").addEventListener("change",e=>fileToDataURL(e.target.files[0],src=>{state.mainSrc=src;$("previewMainImage").src=src;$("previewMainImage").style.display="block";$("emptyMain").style.display="none";}));
+  $("bgImage").addEventListener("change",e=>fileToDataURL(e.target.files[0],src=>{state.bgSrc=src;$("bgArt").style.backgroundImage=`url(${src})`;}));
+
+  function updatePositions(){
+    const apply=(xId,yId,imgId,xVal,yVal)=>{
+      const x=$(xId).value, y=$(yId).value;
+      $(imgId).style.objectPosition=`${x}% ${y}%`;
+      $(xVal).textContent=x+"%"; $(yVal).textContent=y+"%";
+    };
+    apply("profilePosX","profilePosY","previewProfileImage","profilePosXVal","profilePosYVal");
+    apply("mainPosX","mainPosY","previewMainImage","mainPosXVal","mainPosYVal");
+    const bx=$("bgPosX").value, by=$("bgPosY").value;
+    $("bgArt").style.backgroundPosition=`${bx}% ${by}%`; 
+    $("bgPosXVal").textContent=bx+"%"; $("bgPosYVal").textContent=by+"%";
+    const bo=$("bgOpacity").value; $("bgArt").style.opacity=(bo/100).toFixed(2); $("bgOpacityVal").textContent=bo+"%";
+  }
+  ["profilePosX","profilePosY","mainPosX","mainPosY","bgPosX","bgPosY","bgOpacity"].forEach(id=>$(id).addEventListener("input",updatePositions));
+
+  function renderTags(){
+    $("tagEditorList").innerHTML=""; $("previewTags").innerHTML="";
+    state.tags.forEach((tag,i)=>{
+      const btn=document.createElement("button"); btn.className="chip"; btn.textContent=tag+" ×"; btn.onclick=()=>{state.tags.splice(i,1);renderTags();}; $("tagEditorList").appendChild(btn);
+      const span=document.createElement("span"); span.className="tag"; span.textContent=tag; $("previewTags").appendChild(span);
+    });
+  }
+  $("addTagBtn").onclick=()=>{let v=$("tagInput").value.trim(); if(!v) return; if(!v.startsWith("#")) v="#"+v; state.tags.push(v); $("tagInput").value=""; renderTags();};
+  $("tagInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("addTagBtn").click();}});
+
+  function renderInfoEditor(){
+    const area=$("infoEditor"); area.innerHTML="";
+    state.infoBlocks.forEach((b,i)=>{
+      const box=document.createElement("div"); box.className="editor-card";
+      box.innerHTML=`
+        <div class="editor-card-head"><strong>정보 블럭 ${i+1}</strong><button class="danger" data-remove="${i}">삭제</button></div>
+        <div class="field"><label>블럭 제목</label><input type="text" value="${escapeHtml(b.label)}" data-key="label" data-i="${i}"></div>
+        <div class="field">
+          <label>제목·아이콘 색상</label>
+          <div class="color-control">
+            <input type="color" value="${b.titleColor || '#3f3f46'}" data-key="titleColor" data-i="${i}">
+            <span>${(b.titleColor || '#3f3f46').toUpperCase()}</span>
+          </div>
+        </div>
+        <div class="field"><label>내용</label><textarea data-key="text" data-i="${i}">${escapeHtml(b.text)}</textarea></div>
+      `;
+      area.appendChild(box);
+    });
+    area.querySelectorAll("[data-remove]").forEach(btn=>btn.onclick=()=>{state.infoBlocks.splice(Number(btn.dataset.remove),1);renderInfoEditor();renderInfoPreview();});
+    area.querySelectorAll("[data-key]").forEach(el=>{
+      const sync=()=>{
+        const i=Number(el.dataset.i), key=el.dataset.key;
+        state.infoBlocks[i][key]=el.value;
+        if(key==="titleColor"){
+          const label=el.parentElement.querySelector("span");
+          if(label) label.textContent=el.value.toUpperCase();
+        }
+        renderInfoPreview();
+      };
+      el.addEventListener("input",sync); el.addEventListener("change",sync);
+    });
+  }
+  function iconSVG(type){
+    const map = {
+      tendency:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 18.7 5.8 22l1.2-6.8-5-4.9 6.9-1z"/></svg>',
+      ng:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="m7 17 10-10"/></svg>',
+      default:'<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8"/></svg>'
+    };
+    return map[type] || map.default;
+  }
+  function classify(label=""){
+    const l = label.toLowerCase();
+    if(l.includes("ng")) return "ng";
+    if(l.includes("성향") || l.includes("tendency")) return "tendency";
+    return "default";
+  }
+  function renderInfoPreview(){
+    const area=$("previewInfoBlocks"); area.innerHTML="";
+    state.infoBlocks.forEach(b=>{
+      const type=classify(b.label);
+      const div=document.createElement("div");
+      div.className="panel info-block";
+      div.innerHTML=`<div class="info-head">${iconSVG(type)}<div class="info-label">${escapeHtml(b.label||"INFO")}</div></div><div class="info-text">${escapeHtml(b.text||"").replace(/\n/g,"<br>")}</div>`;
+      area.appendChild(div);
+    });
+    syncMainHeight();
+  }
+  $("addInfoBtn").onclick=()=>{state.infoBlocks.push({label:"NEW BLOCK",text:"내용을 입력해 주세요.",titleColor:"#3f3f46"});renderInfoEditor();renderInfoPreview();};
+
+  function renderGalleryEditor(){
+    const area=$("galleryEditor"); area.innerHTML="";
+    state.cards.forEach((c,i)=>{
+      const box=document.createElement("div"); box.className="editor-card";
+      box.innerHTML=`
+        <div class="editor-card-head"><strong>카드 ${i+1}</strong><button class="danger" data-remove="${i}">삭제</button></div>
+        <div class="field"><label>일러스트</label><div class="filebox"><input type="file" accept="image/*" data-file="${i}"></div></div>
+        <div class="row">
+          <div class="field"><label>분류</label><input type="text" value="${escapeHtml(c.kicker)}" data-key="kicker" data-i="${i}"></div>
+          <div class="field"><label>카드 크기</label><select data-key="wide" data-i="${i}"><option value="false" ${!c.wide?"selected":""}>기본</option><option value="true" ${c.wide?"selected":""}>넓게</option></select></div>
+        </div>
+        <div class="field"><label>제목</label><input type="text" value="${escapeHtml(c.title)}" data-key="title" data-i="${i}"></div>
+        <div class="field"><label>설명</label><textarea data-key="desc" data-i="${i}">${escapeHtml(c.desc)}</textarea></div>
+        <div class="row">
+          <div class="field"><label>카드 가로 위치</label><div class="range-row"><input type="range" min="0" max="100" value="${c.posX}" data-key="posX" data-i="${i}"><span class="tiny-num">${c.posX}%</span></div></div>
+          <div class="field"><label>카드 세로 위치</label><div class="range-row"><input type="range" min="0" max="100" value="${c.posY}" data-key="posY" data-i="${i}"><span class="tiny-num">${c.posY}%</span></div></div>
+        </div>
+      `;
+      area.appendChild(box);
+    });
+    area.querySelectorAll("[data-remove]").forEach(btn=>btn.onclick=()=>{state.cards.splice(Number(btn.dataset.remove),1);renderGalleryEditor();renderGallery();});
+    area.querySelectorAll("[data-key]").forEach(el=>{
+      const sync=()=>{
+        const i=Number(el.dataset.i), key=el.dataset.key;
+        let v=el.value; if(key==="wide") v=(v==="true");
+        state.cards[i][key]=v;
+        const num=el.parentElement.querySelector(".tiny-num"); if(num && (key==="posX"||key==="posY")) num.textContent=v+"%";
+        renderGallery();
+      };
+      el.addEventListener("input",sync); el.addEventListener("change",sync);
+    });
+    area.querySelectorAll("[data-file]").forEach(inp=>inp.addEventListener("change",()=>fileToDataURL(inp.files[0],src=>{state.cards[Number(inp.dataset.file)].src=src;renderGallery();})));
+  }
+  function renderGallery(){
+    const area=$("previewGallery"); area.innerHTML="";
+    if(!state.cards.length){area.innerHTML='<div class="empty-gallery">왼쪽에서 아카이브 카드를 추가해 주세요</div>'; return;}
+    state.cards.forEach(c=>{
+      const card=document.createElement("article"); card.className="fan-card"+(c.wide?" wide":"");
+      if(c.src){const img=document.createElement("img"); img.src=c.src; img.style.objectPosition=`${c.posX}% ${c.posY}%`; card.appendChild(img);}
+      card.insertAdjacentHTML("beforeend",`<div class="shade"></div><div class="copy"><div class="kicker">${escapeHtml(c.kicker||"ARCHIVE")}</div><h4>${escapeHtml(c.title||"Untitled")}</h4><p>${escapeHtml(c.desc||"").replace(/\n/g,"<br>")}</p></div>`);
+      area.appendChild(card);
+    });
+  }
+  $("addCardBtn").onclick=()=>{state.cards.push({kicker:"PAIR / CHARACTER",title:"새로운 기록",desc:"좋아하는 장르나 페어, 캐릭터 설명을 적어 주세요.",wide:false,posX:50,posY:50,src:""});renderGalleryEditor();renderGallery();};
+
+  $("accentColor").addEventListener("input",()=>{document.documentElement.style.setProperty("--accent",$("accentColor").value);$("accentHex").textContent=$("accentColor").value.toUpperCase();});
+  $("cornerStyle").addEventListener("change",()=>document.documentElement.style.setProperty("--panel-radius",$("cornerStyle").value+"px"));
+
+  function applyTypographyColors(){
+    const unified = $("unifyTitleColors").checked;
+    const global = $("globalTitleColor").value;
+    const keywordColor = unified ? global : $("keywordsTitleColor").value;
+    const archiveColor = unified ? global : $("archiveTitleColor").value;
+
+    document.documentElement.style.setProperty("--block-title-color", global);
+    document.documentElement.style.setProperty("--body-text-color", $("bodyTextColor").value);
+    document.documentElement.style.setProperty("--hashtag-text-color", $("hashtagTextColor").value);
+
+    if($("keywordsHead")) $("keywordsHead").style.color = keywordColor;
+    if($("archiveHead")) $("archiveHead").style.color = archiveColor;
+
+    $("globalTitleHex").textContent = global.toUpperCase();
+    $("keywordsTitleHex").textContent = $("keywordsTitleColor").value.toUpperCase();
+    $("archiveTitleHex").textContent = $("archiveTitleColor").value.toUpperCase();
+    $("bodyTextHex").textContent = $("bodyTextColor").value.toUpperCase();
+    $("hashtagTextHex").textContent = $("hashtagTextColor").value.toUpperCase();
+
+    // Disable individual fixed-title pickers when unified.
+    $("keywordsTitleColor").disabled = unified;
+    $("archiveTitleColor").disabled = unified;
+
+    renderInfoPreview();
+  }
+
+  ["globalTitleColor","keywordsTitleColor","archiveTitleColor","bodyTextColor","hashtagTextColor","unifyTitleColors"].forEach(id=>{
+    $(id).addEventListener("input",applyTypographyColors);
+    $(id).addEventListener("change",applyTypographyColors);
+  });
+
+  function applyBlockOpacity(){
+    const v=$("blockOpacity").value;
+    document.documentElement.style.setProperty("--block-alpha",(v/100).toFixed(2));
+    $("blockOpacityVal").textContent=v+"%";
+  }
+  $("blockOpacity").addEventListener("input",applyBlockOpacity);
+
+  function serialize(){
+    return {
+      nickname:$("nickname").value, handle:$("handle").value, bio:$("bio").value, commissioners:$("commissioners").value,
+      mainTitle:$("mainTitle").value, mainCategory:$("mainCategory").value, mainDesc:$("mainDesc").value,
+      profilePosX:$("profilePosX").value, profilePosY:$("profilePosY").value, mainPosX:$("mainPosX").value, mainPosY:$("mainPosY").value,
+      bgPosX:$("bgPosX").value, bgPosY:$("bgPosY").value, bgOpacity:$("bgOpacity").value,
+      accent:$("accentColor").value, corner:$("cornerStyle").value,
+      unifyTitleColors:$("unifyTitleColors").checked,
+      globalTitleColor:$("globalTitleColor").value,
+      keywordsTitleColor:$("keywordsTitleColor").value,
+      archiveTitleColor:$("archiveTitleColor").value,
+      bodyTextColor:$("bodyTextColor").value,
+      hashtagTextColor:$("hashtagTextColor").value,
+      blockOpacity:$("blockOpacity").value,
+      tags:state.tags, infoBlocks:state.infoBlocks, cards:state.cards,
+      profileSrc:state.profileSrc, mainSrc:state.mainSrc, bgSrc:state.bgSrc
+    };
+  }
+  $("saveJsonBtn").onclick=()=>{
+    const blob=new Blob([JSON.stringify(serialize(),null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="main-tweet-v26.json"; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $("loadJson").addEventListener("change",()=>{
+    const file=$("loadJson").files[0]; if(!file) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const d=JSON.parse(r.result);
+        ["nickname","handle","bio","commissioners","mainTitle","mainCategory","mainDesc","profilePosX","profilePosY","mainPosX","mainPosY","bgPosX","bgPosY","bgOpacity"].forEach(id=>{ if(d[id]!==undefined){$(id).value=d[id]; if(["nickname","handle","bio","commissioners","mainTitle","mainCategory","mainDesc"].includes(id)) $(id).dispatchEvent(new Event("input"));}});
+        if(d.accent){$("accentColor").value=d.accent;$("accentColor").dispatchEvent(new Event("input"));}
+        if(d.corner){$("cornerStyle").value=d.corner;$("cornerStyle").dispatchEvent(new Event("change"));}
+        if(d.unifyTitleColors!==undefined) $("unifyTitleColors").checked=!!d.unifyTitleColors;
+        if(d.globalTitleColor) $("globalTitleColor").value=d.globalTitleColor;
+        if(d.keywordsTitleColor) $("keywordsTitleColor").value=d.keywordsTitleColor;
+        if(d.archiveTitleColor) $("archiveTitleColor").value=d.archiveTitleColor;
+        if(d.bodyTextColor) $("bodyTextColor").value=d.bodyTextColor;
+        if(d.hashtagTextColor) $("hashtagTextColor").value=d.hashtagTextColor;
+        if(d.blockOpacity!==undefined) $("blockOpacity").value=d.blockOpacity;
+        state.tags=Array.isArray(d.tags)?d.tags:[]; state.infoBlocks=Array.isArray(d.infoBlocks)?d.infoBlocks:[]; state.cards=Array.isArray(d.cards)?d.cards:[]; state.profileSrc=d.profileSrc||""; state.mainSrc=d.mainSrc||""; state.bgSrc=d.bgSrc||"";
+        if(state.profileSrc){$("previewProfileImage").src=state.profileSrc;$("previewProfileImage").style.display="block";}
+        if(state.mainSrc){$("previewMainImage").src=state.mainSrc;$("previewMainImage").style.display="block";$("emptyMain").style.display="none";$("ambient").style.backgroundImage=`url(${state.mainSrc})`;}
+        if(state.bgSrc){$("bgArt").style.backgroundImage=`url(${state.bgSrc})`;}
+        renderTags(); renderInfoEditor(); renderGalleryEditor(); renderGallery(); updatePositions();
+        applyBlockOpacity();
+        applyTypographyColors();
+        syncMainHeight();
+      }catch(e){alert("설정 파일을 읽지 못했어요.");}
+    };
+    r.readAsText(file);
+  });
+  async function waitForPreviewImages(){
+    const imgs = Array.from($("capture").querySelectorAll("img")).filter(img => img.src);
+    await Promise.all(imgs.map(async img=>{
+      try{
+        if(!img.complete){
+          await new Promise(resolve=>{
+            img.addEventListener("load", resolve, {once:true});
+            img.addEventListener("error", resolve, {once:true});
+          });
+        }
+        if(img.decode) await img.decode().catch(()=>{});
+      }catch(_){}
+    }));
+
+    if(document.fonts && document.fonts.ready){
+      try{ await document.fonts.ready; }catch(_){}
+    }
+  }
+
+  function parseObjectPositionValue(value){
+    const parts=String(value || "50% 50%").trim().split(/\s+/);
+    const parseOne=(v)=>{
+      if(!v) return 50;
+      if(v.endsWith("%")){
+        const n=parseFloat(v);
+        return Number.isFinite(n) ? Math.max(0,Math.min(100,n)) : 50;
+      }
+      if(v==="left" || v==="top") return 0;
+      if(v==="right" || v==="bottom") return 100;
+      return 50;
+    };
+    return {
+      x:parseOne(parts[0]),
+      y:parseOne(parts[1] || parts[0])
+    };
+  }
+
+  function drawImageCoverToCanvas(sourceImg, canvas, objectPosition){
+    const w=Math.max(1,Math.round(canvas.width));
+    const h=Math.max(1,Math.round(canvas.height));
+    const ctx=canvas.getContext("2d");
+    ctx.clearRect(0,0,w,h);
+
+    const sw=sourceImg.naturalWidth || sourceImg.width;
+    const sh=sourceImg.naturalHeight || sourceImg.height;
+    if(!sw || !sh) return;
+
+    const pos=parseObjectPositionValue(objectPosition);
+    const scale=Math.max(w/sw,h/sh);
+    const dw=sw*scale;
+    const dh=sh*scale;
+    const dx=-(dw-w)*(pos.x/100);
+    const dy=-(dh-h)*(pos.y/100);
+
+    ctx.drawImage(sourceImg,dx,dy,dw,dh);
+  }
+
+  function replaceCloneImageWithCanvas(clonedDoc, originalImg, cloneImg){
+    if(!originalImg || !cloneImg || !originalImg.src || originalImg.style.display==="none") return;
+
+    const rect=originalImg.getBoundingClientRect();
+    if(rect.width<1 || rect.height<1) return;
+
+    const c=clonedDoc.createElement("canvas");
+    c.width=Math.max(1,Math.round(rect.width*2));
+    c.height=Math.max(1,Math.round(rect.height*2));
+
+    const position=originalImg.style.objectPosition || getComputedStyle(originalImg).objectPosition || "50% 50%";
+
+    // Draw at 2x for a crisp export.
+    const ctx=c.getContext("2d");
+    ctx.save();
+    ctx.scale(2,2);
+
+    const sw=originalImg.naturalWidth || originalImg.width;
+    const sh=originalImg.naturalHeight || originalImg.height;
+    const pos=parseObjectPositionValue(position);
+    const scale=Math.max(rect.width/sw,rect.height/sh);
+    const dw=sw*scale;
+    const dh=sh*scale;
+    const dx=-(dw-rect.width)*(pos.x/100);
+    const dy=-(dh-rect.height)*(pos.y/100);
+    ctx.drawImage(originalImg,dx,dy,dw,dh);
+    ctx.restore();
+
+    const computed=getComputedStyle(originalImg);
+    c.style.cssText=cloneImg.style.cssText;
+    c.style.position=computed.position;
+    c.style.inset="0";
+    c.style.width="100%";
+    c.style.height="100%";
+    c.style.display="block";
+    c.style.objectFit="initial";
+    c.style.objectPosition="initial";
+    c.style.zIndex="0";
+
+    cloneImg.replaceWith(c);
+  }
+
+  function freezeExportLayout(target){
+    const root=target.getBoundingClientRect();
+    const selectors=[
+      ".hero-grid",
+      "#mainArtCard",
+      "#rightColumn",
+      ".profile-card",
+      ".profile-top",
+      ".avatar",
+      "#previewInfoBlocks",
+      ".info-block",
+      ".keywords-panel",
+      ".gallery-section",
+      ".gallery",
+      ".fan-card",
+      ".bottom-credit"
+    ].join(",");
+
+    const frozen=[];
+    target.querySelectorAll(selectors).forEach((el,i)=>{
+      const r=el.getBoundingClientRect();
+      const key="freeze-"+i;
+      el.dataset.exportKey=key;
+      frozen.push({key,width:r.width,height:r.height});
+    });
+
+    return {width:root.width,height:root.height,frozen};
+  }
+
+  function prepareCloneForExport(clonedDoc, layout, alpha){
+    const liveTarget=$("capture");
+    const cloneTarget=clonedDoc.getElementById("capture");
+    if(!cloneTarget) return;
+
+    cloneTarget.style.width=layout.width+"px";
+    cloneTarget.style.height=layout.height+"px";
+    cloneTarget.style.maxWidth="none";
+    cloneTarget.style.minHeight="0";
+    cloneTarget.style.margin="0";
+
+    layout.frozen.forEach(item=>{
+      const el=clonedDoc.querySelector(`[data-export-key="${item.key}"]`);
+      if(!el) return;
+      el.style.width=item.width+"px";
+      el.style.height=item.height+"px";
+      el.style.minHeight="0";
+      el.style.maxHeight="none";
+      el.style.boxSizing="border-box";
+      el.style.flexShrink="0";
+    });
+
+    // The uploaded background illustration is the ONLY art allowed behind the blocks.
+    const cloneAmbient=cloneTarget.querySelector(".ambient");
+    if(cloneAmbient) cloneAmbient.style.display="none";
+
+    // Preserve selected transparency on every glass block.
+    cloneTarget.querySelectorAll(".panel,.gallery-section,.info-block,.keywords-panel").forEach(el=>{
+      el.style.background=`rgba(255,255,255,${alpha})`;
+      el.style.backdropFilter="none";
+      el.style.webkitBackdropFilter="none";
+    });
+
+    // Main artwork: replace <img> with a pre-cropped canvas.
+    const liveMain=liveTarget.querySelector("#previewMainImage");
+    const cloneMain=cloneTarget.querySelector("#previewMainImage");
+    replaceCloneImageWithCanvas(clonedDoc,liveMain,cloneMain);
+
+    // Profile artwork.
+    const liveProfile=liveTarget.querySelector("#previewProfileImage");
+    const cloneProfile=cloneTarget.querySelector("#previewProfileImage");
+    replaceCloneImageWithCanvas(clonedDoc,liveProfile,cloneProfile);
+
+    // Archive artworks.
+    const liveCards=liveTarget.querySelectorAll("#previewGallery .fan-card");
+    const cloneCards=cloneTarget.querySelectorAll("#previewGallery .fan-card");
+    liveCards.forEach((card,i)=>{
+      const liveImg=card.querySelector(":scope > img");
+      const cloneImg=cloneCards[i]?.querySelector(":scope > img");
+      if(liveImg && cloneImg){
+        replaceCloneImageWithCanvas(clonedDoc,liveImg,cloneImg);
+      }
+    });
+
+    // Force art -> overlay -> text stacking in the export clone as well.
+    cloneTarget.querySelectorAll(".main-art-card > canvas, .fan-card > canvas").forEach(el=>{
+      el.style.zIndex="0";
+    });
+    const heroOverlay=cloneTarget.querySelector(".hero-overlay");
+    if(heroOverlay){
+      heroOverlay.style.inset="0";
+      heroOverlay.style.zIndex="10";
+    }
+    cloneTarget.querySelectorAll(".fan-card .shade").forEach(el=>{
+      el.style.inset="0";
+      el.style.zIndex="10";
+    });
+    cloneTarget.querySelectorAll(".fan-card .copy").forEach(el=>{
+      el.style.zIndex="20";
+    });
+
+    // html2canvas does not reproduce backdrop blur reliably. Remove only that
+    // effect in the clone; do NOT remove opacity or uploaded artwork.
+    cloneTarget.querySelectorAll("*").forEach(el=>{
+      el.style.backdropFilter="none";
+      el.style.webkitBackdropFilter="none";
+    });
+  }
+
+  $("saveImageBtn").onclick=async()=>{
+    const btn=$("saveImageBtn");
+    const old=btn.textContent;
+    btn.textContent="렌더링 중…";
+    btn.disabled=true;
+
+    try{
+      if(typeof html2canvas!=="function"){
+        throw new Error("html2canvas failed to load.");
+      }
+
+      syncMainHeight();
+      applyBlockOpacity();
+      applyTypographyColors();
+      await waitForPreviewImages();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+
+      const target=$("capture");
+      const layout=freezeExportLayout(target);
+      const alpha=(parseFloat($("blockOpacity").value)||22)/100;
+
+      const canvas=await html2canvas(target,{
+        scale:2,
+        useCORS:true,
+        allowTaint:false,
+        backgroundColor:"#e7e8ef",
+        logging:false,
+        imageTimeout:15000,
+        removeContainer:true,
+        scrollX:0,
+        scrollY:0,
+        width:Math.ceil(layout.width),
+        height:Math.ceil(layout.height),
+        windowWidth:Math.max(document.documentElement.clientWidth,Math.ceil(layout.width)),
+        windowHeight:Math.max(document.documentElement.clientHeight,Math.ceil(layout.height)),
+        onclone:(clonedDoc)=>{
+          prepareCloneForExport(clonedDoc,layout,alpha);
+        }
+      });
+
+      target.querySelectorAll("[data-export-key]").forEach(el=>{
+        delete el.dataset.exportKey;
+      });
+
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+      if(!blob) throw new Error("PNG blob is empty.");
+
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;
+      a.download="main-tweet-v26.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+
+    }catch(e){
+      console.error("PNG export failed:",e);
+      try{
+        $("capture").querySelectorAll("[data-export-key]").forEach(el=>{
+          delete el.dataset.exportKey;
+        });
+      }catch(_){}
+      alert("이미지 저장에 실패했어요. 개발자 콘솔의 첫 번째 빨간 오류를 캡처해서 보내주세요.");
+    }finally{
+      btn.textContent=old;
+      btn.disabled=false;
+    }
+  };
+
+  $("resetBtn").onclick=()=>{if(confirm("입력한 내용을 초기화할까요?")) location.reload();};
+
+  function syncMainHeight(){
+    const main=$("mainArtCard"), right=$("rightColumn");
+    if(window.innerWidth>1170){
+      requestAnimationFrame(()=>{
+        main.style.minHeight = "0";
+        main.style.height = right.getBoundingClientRect().height + "px";
+      });
+    }else{
+      main.style.height = "420px";
+      main.style.minHeight = "0";
+    }
+  }
+  window.addEventListener("resize",syncMainHeight);
+
+  if("ResizeObserver" in window){
+    const ro = new ResizeObserver(()=>syncMainHeight());
+    ro.observe($("rightColumn"));
+  }
+
+
+  function setupCollapsibleEditorSections(){
+    const sections = document.querySelectorAll(".editor .section");
+
+    sections.forEach((section, index)=>{
+      if(section.dataset.collapseReady === "true") return;
+
+      const heading = section.querySelector(":scope > h2");
+      if(!heading) return;
+
+      section.dataset.collapseReady = "true";
+
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "section-toggle";
+      toggle.setAttribute("aria-expanded", "true");
+
+      const title = heading.cloneNode(true);
+      const chevron = document.createElement("span");
+      chevron.className = "section-chevron";
+      chevron.textContent = "⌄";
+
+      toggle.appendChild(title);
+      toggle.appendChild(chevron);
+
+      const content = document.createElement("div");
+      content.className = "section-content";
+
+      const children = Array.from(section.children);
+      children.forEach(child=>{
+        if(child !== heading) content.appendChild(child);
+      });
+
+      heading.remove();
+      section.appendChild(toggle);
+      section.appendChild(content);
+
+      toggle.addEventListener("click", ()=>{
+        const collapsed = section.classList.toggle("collapsed");
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+      });
+    });
+
+    const collapseAll = document.getElementById("collapseAllBtn");
+    const expandAll = document.getElementById("expandAllBtn");
+
+    if(collapseAll){
+      collapseAll.addEventListener("click", ()=>{
+        document.querySelectorAll(".editor .section").forEach(section=>{
+          section.classList.add("collapsed");
+          const toggle = section.querySelector(":scope > .section-toggle");
+          if(toggle) toggle.setAttribute("aria-expanded", "false");
+        });
+      });
+    }
+
+    if(expandAll){
+      expandAll.addEventListener("click", ()=>{
+        document.querySelectorAll(".editor .section").forEach(section=>{
+          section.classList.remove("collapsed");
+          const toggle = section.querySelector(":scope > .section-toggle");
+          if(toggle) toggle.setAttribute("aria-expanded", "true");
+        });
+      });
+    }
+  }
+
+  setupCollapsibleEditorSections();
+
+  renderTags(); renderInfoEditor(); renderGalleryEditor(); renderGallery(); updatePositions();
+  applyBlockOpacity();
+  applyTypographyColors();
+  syncMainHeight();
+})();
+</script>
+</body>
+</html>
