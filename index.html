@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Main Tweet Studio v28</title>
+<title>Main Tweet Studio v31</title>
 <style>
   :root{
     --accent:#6f74ff;
@@ -86,15 +86,15 @@
   .editor-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
   .editor-card-head strong{font-size:11px}
 
-  .workspace{padding:20px;overflow:auto}
+  .workspace{padding:16px;overflow:auto}
   .toolbar{
-    max-width:980px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:center;
+    max-width:840px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:center;
     gap:10px;color:var(--muted);font-size:12px
   }
   .live{display:flex;align-items:center;gap:8px}
   .dot{width:8px;height:8px;border-radius:50%;background:#34c759;box-shadow:0 0 0 4px rgba(52,199,89,.12)}
   .preview-shell{
-    max-width:980px;margin:auto;border-radius:0;padding:1px;
+    max-width:840px;margin:auto;border-radius:0;padding:1px;
     background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,255,255,.26));
     box-shadow:var(--shadow);
   }
@@ -110,7 +110,7 @@
   }
   .ambient{display:none !important}
   .preview-content{position:relative;z-index:1}
-  .hero-grid{display:grid;grid-template-columns:minmax(0,1.20fr) minmax(290px,.86fr);gap:16px;align-items:start}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1.10fr) minmax(270px,.82fr);gap:16px;align-items:start}
   .main-art-card,.panel,.gallery-section,.info-block,.keywords-panel{
     background:rgba(255,255,255,var(--block-alpha));
     border:1px solid rgba(255,255,255,.50);
@@ -132,7 +132,9 @@
     width:100% !important;
     height:100% !important;
     object-fit:cover;
-    object-position:50% 50%
+    object-position:50% 50%;
+    transform:scale(var(--img-zoom,1));
+    transform-origin:center center;
   }
   .empty-art{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8a8a93;font-size:14px;background:linear-gradient(145deg,rgba(234,235,241,.84),rgba(216,218,228,.78))}
   .hero-overlay{
@@ -168,7 +170,14 @@
     align-items:center
   }
   .avatar{width:82px;height:82px;border-radius:23px;overflow:hidden;flex:none;background:rgba(229,229,234,.68);box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
-  .avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+  .avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:50% 50%;
+    transform:scale(var(--img-zoom,1));
+    transform-origin:center center;
+  }
   .profile-meta{
     min-width:0;
     display:flex;
@@ -251,7 +260,9 @@
     width:100% !important;
     height:100% !important;
     object-fit:cover;
-    object-position:50% 50%
+    object-position:50% 50%;
+    transform:scale(var(--img-zoom,1));
+    transform-origin:center center;
   }
   .fan-card .shade{
     position:absolute !important;
@@ -439,6 +450,13 @@
         <div class="field"><label>프로필 사진 가로 위치</label><div class="range-row"><input id="profilePosX" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="profilePosXVal">50%</span></div></div>
         <div class="field"><label>프로필 사진 세로 위치</label><div class="range-row"><input id="profilePosY" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="profilePosYVal">50%</span></div></div>
       </div>
+      <div class="field">
+        <label>프로필 사진 확대 / 축소</label>
+        <div class="range-row">
+          <input id="profileZoom" type="range" min="80" max="180" value="100" />
+          <span class="tiny-num" id="profileZoomVal">100%</span>
+        </div>
+      </div>
       <div class="field"><label>바이오</label><textarea id="bio">바이오 또는 간단한 계정 설명을 적어주세요.</textarea></div>
     </div>
 
@@ -463,10 +481,24 @@
         <div class="field"><label>메인 가로 위치</label><div class="range-row"><input id="mainPosX" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="mainPosXVal">50%</span></div></div>
         <div class="field"><label>메인 세로 위치</label><div class="range-row"><input id="mainPosY" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="mainPosYVal">50%</span></div></div>
       </div>
+      <div class="field">
+        <label>메인 일러스트 확대 / 축소</label>
+        <div class="range-row">
+          <input id="mainZoom" type="range" min="80" max="180" value="100" />
+          <span class="tiny-num" id="mainZoomVal">100%</span>
+        </div>
+      </div>
       <div class="field"><label>배경 일러스트</label><div class="filebox"><input id="bgImage" type="file" accept="image/*" /></div></div>
       <div class="row">
         <div class="field"><label>배경 가로 위치</label><div class="range-row"><input id="bgPosX" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="bgPosXVal">50%</span></div></div>
         <div class="field"><label>배경 세로 위치</label><div class="range-row"><input id="bgPosY" type="range" min="0" max="100" value="50" /><span class="tiny-num" id="bgPosYVal">50%</span></div></div>
+      </div>
+      <div class="field">
+        <label>배경 일러스트 확대 / 축소</label>
+        <div class="range-row">
+          <input id="bgZoom" type="range" min="80" max="180" value="100" />
+          <span class="tiny-num" id="bgZoomVal">100%</span>
+        </div>
       </div>
       <div class="field"><label>배경 투명도</label><div class="range-row"><input id="bgOpacity" type="range" min="0" max="60" value="28" /><span class="tiny-num" id="bgOpacityVal">28%</span></div></div>
     </div>
@@ -666,9 +698,9 @@
       {label:"NG", text:"NG 사항을 적어주세요", titleColor:"#3f3f46"}
     ],
     cards:[
-      {kicker:"PAIR", title:"SUB PAIR", desc:"좋아하는 페어나 세계관 설명을 적어 주세요.", wide:true, posX:50, posY:50, src:""},
-      {kicker:"CHARACTER", title:"최애 캐릭터", desc:"캐릭터에 대한 짧은 소개나 포인트.", wide:false, posX:50, posY:50, src:""},
-      {kicker:"GENRE", title:"최근 덕질", desc:"요즘 파는 장르나 작품을 적어 주세요.", wide:false, posX:50, posY:50, src:""}
+      {kicker:"PAIR", title:"SUB PAIR", desc:"좋아하는 페어나 세계관 설명을 적어 주세요.", wide:true, posX:50, posY:50, zoom:100, src:""},
+      {kicker:"CHARACTER", title:"최애 캐릭터", desc:"캐릭터에 대한 짧은 소개나 포인트.", wide:false, posX:50, posY:50, zoom:100, src:""},
+      {kicker:"GENRE", title:"최근 덕질", desc:"요즘 파는 장르나 작품을 적어 주세요.", wide:false, posX:50, posY:50, zoom:100, src:""}
     ],
     profileSrc:"", mainSrc:"", bgSrc:""
   };
@@ -690,19 +722,39 @@
   $("bgImage").addEventListener("change",e=>fileToDataURL(e.target.files[0],src=>{state.bgSrc=src;$("bgArt").style.backgroundImage=`url(${src})`;}));
 
   function updatePositions(){
-    const apply=(xId,yId,imgId,xVal,yVal)=>{
+    const apply=(xId,yId,imgId,xVal,yVal,zoomId,zoomValId)=>{
       const x=$(xId).value, y=$(yId).value;
-      $(imgId).style.objectPosition=`${x}% ${y}%`;
-      $(xVal).textContent=x+"%"; $(yVal).textContent=y+"%";
+      const img=$(imgId);
+      img.style.objectPosition=`${x}% ${y}%`;
+      $(xVal).textContent=x+"%";
+      $(yVal).textContent=y+"%";
+
+      if(zoomId && $(zoomId)){
+        const z=$(zoomId).value;
+        img.style.setProperty("--img-zoom", String(z/100));
+        $(zoomValId).textContent=z+"%";
+      }
     };
-    apply("profilePosX","profilePosY","previewProfileImage","profilePosXVal","profilePosYVal");
-    apply("mainPosX","mainPosY","previewMainImage","mainPosXVal","mainPosYVal");
+
+    apply("profilePosX","profilePosY","previewProfileImage","profilePosXVal","profilePosYVal","profileZoom","profileZoomVal");
+    apply("mainPosX","mainPosY","previewMainImage","mainPosXVal","mainPosYVal","mainZoom","mainZoomVal");
+
     const bx=$("bgPosX").value, by=$("bgPosY").value;
-    $("bgArt").style.backgroundPosition=`${bx}% ${by}%`; 
-    $("bgPosXVal").textContent=bx+"%"; $("bgPosYVal").textContent=by+"%";
-    const bo=$("bgOpacity").value; $("bgArt").style.opacity=(bo/100).toFixed(2); $("bgOpacityVal").textContent=bo+"%";
+    const bz=$("bgZoom").value;
+    $("bgArt").style.backgroundPosition=`${bx}% ${by}%`;
+    $("bgArt").style.backgroundSize=`${bz}% auto`;
+    $("bgPosXVal").textContent=bx+"%";
+    $("bgPosYVal").textContent=by+"%";
+    $("bgZoomVal").textContent=bz+"%";
+
+    const bo=$("bgOpacity").value;
+    $("bgArt").style.opacity=(bo/100).toFixed(2);
+    $("bgOpacityVal").textContent=bo+"%";
   }
-  ["profilePosX","profilePosY","mainPosX","mainPosY","bgPosX","bgPosY","bgOpacity"].forEach(id=>$(id).addEventListener("input",updatePositions));
+
+  ["profilePosX","profilePosY","profileZoom","mainPosX","mainPosY","mainZoom","bgPosX","bgPosY","bgZoom","bgOpacity"].forEach(id=>{
+    $(id).addEventListener("input",updatePositions);
+  });
 
   function renderTags(){
     $("tagEditorList").innerHTML=""; $("previewTags").innerHTML="";
@@ -790,6 +842,13 @@
           <div class="field"><label>카드 가로 위치</label><div class="range-row"><input type="range" min="0" max="100" value="${c.posX}" data-key="posX" data-i="${i}"><span class="tiny-num">${c.posX}%</span></div></div>
           <div class="field"><label>카드 세로 위치</label><div class="range-row"><input type="range" min="0" max="100" value="${c.posY}" data-key="posY" data-i="${i}"><span class="tiny-num">${c.posY}%</span></div></div>
         </div>
+        <div class="field">
+          <label>카드 일러스트 확대 / 축소</label>
+          <div class="range-row">
+            <input type="range" min="80" max="180" value="${c.zoom || 100}" data-key="zoom" data-i="${i}">
+            <span class="tiny-num">${c.zoom || 100}%</span>
+          </div>
+        </div>
       `;
       area.appendChild(box);
     });
@@ -799,7 +858,8 @@
         const i=Number(el.dataset.i), key=el.dataset.key;
         let v=el.value; if(key==="wide") v=(v==="true");
         state.cards[i][key]=v;
-        const num=el.parentElement.querySelector(".tiny-num"); if(num && (key==="posX"||key==="posY")) num.textContent=v+"%";
+        const num=el.parentElement.querySelector(".tiny-num");
+        if(num && (key==="posX"||key==="posY"||key==="zoom")) num.textContent=v+"%";
         renderGallery();
       };
       el.addEventListener("input",sync); el.addEventListener("change",sync);
@@ -811,12 +871,18 @@
     if(!state.cards.length){area.innerHTML='<div class="empty-gallery">왼쪽에서 아카이브 카드를 추가해 주세요</div>'; return;}
     state.cards.forEach(c=>{
       const card=document.createElement("article"); card.className="fan-card"+(c.wide?" wide":"");
-      if(c.src){const img=document.createElement("img"); img.src=c.src; img.style.objectPosition=`${c.posX}% ${c.posY}%`; card.appendChild(img);}
+      if(c.src){
+        const img=document.createElement("img");
+        img.src=c.src;
+        img.style.objectPosition=`${c.posX}% ${c.posY}%`;
+        img.style.setProperty("--img-zoom", String((c.zoom || 100)/100));
+        card.appendChild(img);
+      }
       card.insertAdjacentHTML("beforeend",`<div class="shade"></div><div class="copy"><div class="kicker">${escapeHtml(c.kicker||"ARCHIVE")}</div><h4>${escapeHtml(c.title||"Untitled")}</h4><p>${escapeHtml(c.desc||"").replace(/\n/g,"<br>")}</p></div>`);
       area.appendChild(card);
     });
   }
-  $("addCardBtn").onclick=()=>{state.cards.push({kicker:"PAIR / CHARACTER",title:"새로운 기록",desc:"좋아하는 장르나 페어, 캐릭터 설명을 적어 주세요.",wide:false,posX:50,posY:50,src:""});renderGalleryEditor();renderGallery();};
+  $("addCardBtn").onclick=()=>{state.cards.push({kicker:"PAIR / CHARACTER",title:"새로운 기록",desc:"좋아하는 장르나 페어, 캐릭터 설명을 적어 주세요.",wide:false,posX:50,posY:50,zoom:100,src:""});renderGalleryEditor();renderGallery();};
 
   $("accentColor").addEventListener("input",()=>{document.documentElement.style.setProperty("--accent",$("accentColor").value);$("accentHex").textContent=$("accentColor").value.toUpperCase();});
   $("cornerStyle").addEventListener("change",()=>document.documentElement.style.setProperty("--panel-radius",$("cornerStyle").value+"px"));
@@ -863,8 +929,9 @@
     return {
       nickname:$("nickname").value, handle:$("handle").value, bio:$("bio").value, commissioners:$("commissioners").value,
       mainTitle:$("mainTitle").value, mainCategory:$("mainCategory").value, mainDesc:$("mainDesc").value,
-      profilePosX:$("profilePosX").value, profilePosY:$("profilePosY").value, mainPosX:$("mainPosX").value, mainPosY:$("mainPosY").value,
-      bgPosX:$("bgPosX").value, bgPosY:$("bgPosY").value, bgOpacity:$("bgOpacity").value,
+      profilePosX:$("profilePosX").value, profilePosY:$("profilePosY").value, profileZoom:$("profileZoom").value,
+      mainPosX:$("mainPosX").value, mainPosY:$("mainPosY").value, mainZoom:$("mainZoom").value,
+      bgPosX:$("bgPosX").value, bgPosY:$("bgPosY").value, bgZoom:$("bgZoom").value, bgOpacity:$("bgOpacity").value,
       accent:$("accentColor").value, corner:$("cornerStyle").value,
       unifyTitleColors:$("unifyTitleColors").checked,
       globalTitleColor:$("globalTitleColor").value,
@@ -879,7 +946,7 @@
   }
   $("saveJsonBtn").onclick=()=>{
     const blob=new Blob([JSON.stringify(serialize(),null,2)],{type:"application/json"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="main-tweet-v28.json"; a.click(); URL.revokeObjectURL(a.href);
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="main-tweet-v31.json"; a.click(); URL.revokeObjectURL(a.href);
   };
   $("loadJson").addEventListener("change",()=>{
     const file=$("loadJson").files[0]; if(!file) return;
@@ -887,7 +954,7 @@
     r.onload=()=>{
       try{
         const d=JSON.parse(r.result);
-        ["nickname","handle","bio","commissioners","mainTitle","mainCategory","mainDesc","profilePosX","profilePosY","mainPosX","mainPosY","bgPosX","bgPosY","bgOpacity"].forEach(id=>{ if(d[id]!==undefined){$(id).value=d[id]; if(["nickname","handle","bio","commissioners","mainTitle","mainCategory","mainDesc"].includes(id)) $(id).dispatchEvent(new Event("input"));}});
+        ["nickname","handle","bio","commissioners","mainTitle","mainCategory","mainDesc","profilePosX","profilePosY","profileZoom","mainPosX","mainPosY","mainZoom","bgPosX","bgPosY","bgZoom","bgOpacity"].forEach(id=>{ if(d[id]!==undefined){$(id).value=d[id]; if(["nickname","handle","bio","commissioners","mainTitle","mainCategory","mainDesc"].includes(id)) $(id).dispatchEvent(new Event("input"));}});
         if(d.accent){$("accentColor").value=d.accent;$("accentColor").dispatchEvent(new Event("input"));}
         if(d.corner){$("cornerStyle").value=d.corner;$("cornerStyle").dispatchEvent(new Event("change"));}
         if(d.unifyTitleColors!==undefined) $("unifyTitleColors").checked=!!d.unifyTitleColors;
@@ -977,6 +1044,7 @@
     c.height=Math.max(1,Math.round(rect.height*2));
 
     const position=originalImg.style.objectPosition || getComputedStyle(originalImg).objectPosition || "50% 50%";
+    const zoom=parseFloat(originalImg.style.getPropertyValue("--img-zoom")) || 1;
 
     // Draw at 2x for a crisp export.
     const ctx=c.getContext("2d");
@@ -986,7 +1054,7 @@
     const sw=originalImg.naturalWidth || originalImg.width;
     const sh=originalImg.naturalHeight || originalImg.height;
     const pos=parseObjectPositionValue(position);
-    const scale=Math.max(rect.width/sw,rect.height/sh);
+    const scale=Math.max(rect.width/sw,rect.height/sh) * zoom;
     const dw=sw*scale;
     const dh=sh*scale;
     const dx=-(dw-rect.width)*(pos.x/100);
@@ -1003,6 +1071,7 @@
     c.style.display="block";
     c.style.objectFit="initial";
     c.style.objectPosition="initial";
+    c.style.transform="none";
     c.style.zIndex="0";
 
     cloneImg.replaceWith(c);
@@ -1166,7 +1235,7 @@
       const url=URL.createObjectURL(blob);
       const a=document.createElement("a");
       a.href=url;
-      a.download="main-tweet-v28.png";
+      a.download="main-tweet-v31.png";
       document.body.appendChild(a);
       a.click();
       a.remove();
